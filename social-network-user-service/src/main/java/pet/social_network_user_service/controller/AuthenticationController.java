@@ -15,7 +15,7 @@ import pet.social_network_user_service.service.AuthenticationService;
 import pet.social_network_user_service.service.JwtService;
 
 @RestController
-@RequestMapping("/api/users/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 

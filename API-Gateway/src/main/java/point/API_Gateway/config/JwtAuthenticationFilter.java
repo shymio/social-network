@@ -1,6 +1,8 @@
 package point.API_Gateway.config;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpHeaders;
@@ -14,25 +16,38 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter implements GatewayFilter {
 
-    private JwtService jwtService;
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private final JwtService jwtService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("Authorization header is missing or doesn't start with Bearer.");
             return chain.filter(exchange);
         }
 
         String jwt = authHeader.substring(7);
+        logger.info("Extracted JWT: {}", jwt);
 
         try {
-            // Проверка валидности токена
             if (jwtService.isTokenValid(jwt)) {
-                // Логика проверки и передачи необходимых данных в контекст
+                String username = jwtService.extractUsername(jwt);
+                logger.info("User {} authenticated, proceeding with the request", username);
+
+                // Добавляем информацию о пользователе в заголовки
+                exchange.getRequest().mutate()
+                        .header("X-Authenticated-User", username)
+                        .build();
+            } else {
+                logger.info("Token is invalid");
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             }
+
         } catch (Exception e) {
-            // Обработка исключений, если токен недействителен
+            logger.error("Error occurred during token validation: {}", e.getMessage(), e);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
