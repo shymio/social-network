@@ -19,7 +19,7 @@ public class PostService {
     }
 
     public List<Post> findAll(Long userId) {
-        return postRepository.findAll(userId);
+        return postRepository.findAllById(userId);
     }
 
     public Post save(Post post) {
