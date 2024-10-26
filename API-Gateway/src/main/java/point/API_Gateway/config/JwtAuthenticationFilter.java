@@ -1,6 +1,7 @@
 package point.API_Gateway.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -14,9 +15,10 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter implements GatewayFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+//    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
     @Override
@@ -24,30 +26,30 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("Authorization header is missing or doesn't start with Bearer.");
+            log.warn("Authorization header is missing or doesn't start with Bearer.");
             return chain.filter(exchange);
         }
 
         String jwt = authHeader.substring(7);
-        logger.info("Extracted JWT: {}", jwt);
+        log.info("Extracted JWT: {}", jwt);
 
         try {
             if (jwtService.isTokenValid(jwt)) {
                 String username = jwtService.extractUsername(jwt);
-                logger.info("User {} authenticated, proceeding with the request", username);
+                log.info("User {} authenticated, proceeding with the request", username);
 
                 // Добавляем информацию о пользователе в заголовки
                 exchange.getRequest().mutate()
                         .header("X-Authenticated-User", username)
                         .build();
             } else {
-                logger.info("Token is invalid");
+                log.info("Token is invalid");
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
 
         } catch (Exception e) {
-            logger.error("Error occurred during token validation: {}", e.getMessage(), e);
+            log.error("Error occurred during token validation: {}", e.getMessage(), e);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
