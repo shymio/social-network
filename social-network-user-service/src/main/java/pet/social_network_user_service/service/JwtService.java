@@ -9,6 +9,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,14 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Optional<Long> extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        if (claims != null) {
+            return Optional.of(Long.parseLong(claims.get("userId").toString()));
+        } else
+            return Optional.empty();
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -84,7 +93,7 @@ public class JwtService {
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(token.replace("Bearer ", ""))
                 .getBody();
     }
 

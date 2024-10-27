@@ -23,7 +23,6 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
-//    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/me")
     public ResponseEntity<Optional<User>> authenticatedUser(@RequestHeader("X-Authenticated-User") String username) {

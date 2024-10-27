@@ -21,6 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((authz) -> authz
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/users/me").authenticated()
+                    .requestMatchers("/api/users/**").authenticated()
                     .anyRequest().authenticated())
                 .addFilterBefore(new UserHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
